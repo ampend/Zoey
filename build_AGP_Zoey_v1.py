@@ -26,32 +26,32 @@ def get_chrom_lengths():
 # STEP TWO
 ###################################################################################################
 def read_line(Dict,curr_index,i):
-    #Contig 1
-    chrom1,start1,end1,contigID1,Dir1,length1 = Dict[curr_index][0],int(Dict[curr_index][1]),int(Dict[curr_index][2]), Dict[curr_index][3], Dict[curr_index][4], int(Dict[curr_index][5])
-    #Contig 2
-    chrom2,start2,end2,contigID2,Dir2,length2 = Dict[i+1][0],int(Dict[i+1][1]),int(Dict[i+1][2]), Dict[i+1][3], Dict[i+1][4], int(Dict[i+1][5])
-    return chrom1,start1,end1,contigID1,Dir1,length1,chrom2,start2,end2,contigID2,Dir2,length2
+	#Contig 1
+	chrom1,start1,end1,contigID1,Dir1,length1 = Dict[curr_index][0],int(Dict[curr_index][1]),int(Dict[curr_index][2]), Dict[curr_index][3], Dict[curr_index][4], int(Dict[curr_index][5])
+	#Contig 2
+	chrom2,start2,end2,contigID2,Dir2,length2 = Dict[i+1][0],int(Dict[i+1][1]),int(Dict[i+1][2]), Dict[i+1][3], Dict[i+1][4], int(Dict[i+1][5])
+	return chrom1,start1,end1,contigID1,Dir1,length1,chrom2,start2,end2,contigID2,Dir2,length2
 ###################################################################################################
 def read_last_line(Dict):
-    #Contig 1
-    chrom1,start1,end1,contigID1,Dir1,length1 = Dict[i-1][0],int(Dict[i-1][1]),int(Dict[i-1][2]), Dict[i-1][3], Dict[i-1][4], int(Dict[i-1][5])
-    #Contig 2
-    chrom2,start2,end2,contigID2,Dir2,length2 = Dict[i][0],int(Dict[i][1]),int(Dict[i][2]), Dict[i][3], Dict[i][4], int(Dict[i][5])
-    return chrom1,start1,end1,contigID1,Dir1,length1,chrom2,start2,end2,contigID2,Dir2,length2
+	#Contig 1
+	chrom1,start1,end1,contigID1,Dir1,length1 = Dict[i-1][0],int(Dict[i-1][1]),int(Dict[i-1][2]), Dict[i-1][3], Dict[i-1][4], int(Dict[i-1][5])
+	#Contig 2
+	chrom2,start2,end2,contigID2,Dir2,length2 = Dict[i][0],int(Dict[i][1]),int(Dict[i][2]), Dict[i][3], Dict[i][4], int(Dict[i][5])
+	return chrom1,start1,end1,contigID1,Dir1,length1,chrom2,start2,end2,contigID2,Dir2,length2
 ###################################################################################################
 def process_last_contig(contigDict,curr_index,i):
-    chrom1,start1,end1,contigID1,Dir1,length1,chrom2,start2,end2,contigID2,Dir2,length2 = read_last_line(contigDict)
-    #print ('\n#%s (%i) -- %s (%i)' % (contigID1,i-1,contigID2,i))
-    logFile.write(('\n#%s (%i) -- %s (%i)\n' % (contigID1,i-1,contigID2,i)))
-    if start1 == start2 or end1 == end2:
-        return
-    if end2 > end1:
-        curr_index+=1 
-        curated_contigDict[i] = [chrom2,start2,end2,contigID2,Dir2,length2]
-        inList.append(contigID2)
-        #print('PASS - Last contig on chromosome overlap or is spaced correctly')
-        logFile.write('PASS - Last contig on chromosome overlap or is spaced correctly\n')
-        return
+	chrom1,start1,end1,contigID1,Dir1,length1,chrom2,start2,end2,contigID2,Dir2,length2 = read_last_line(contigDict)
+	#print ('\n#%s (%i) -- %s (%i)' % (contigID1,i-1,contigID2,i))
+	logFile.write(('\n#%s (%i) -- %s (%i)\n' % (contigID1,i-1,contigID2,i)))
+	if start1 == start2 or end1 == end2:
+		return
+	if end2 > end1:
+		curr_index+=1 
+		curated_contigDict[i] = [chrom2,start2,end2,contigID2,Dir2,length2]
+		inList.append(contigID2)
+		#print('PASS - Last contig on chromosome overlap or is spaced correctly')
+		logFile.write('PASS - Last contig on chromosome overlap or is spaced correctly\n')
+		return
 ###################################################################################################
 def process_first_contig(contigDict,curr_index,i):
 	curr_index+=1
@@ -72,25 +72,25 @@ def process_first_contig(contigDict,curr_index,i):
 	return curr_index 
 ###################################################################################################
 def process_same_starts(contigDict,curr_index,i):
-    if start1 == start2 and end1 > end2:
-        #print('FAIL -- Share start, contig1 longer' + '\n' + str(contigDict[i]) + '\n' + str(contigDict[i+1]))
-        logFile.write('FAIL -- Share start, contig1 longer' + '\n' + str(contigDict[i]) + '\n' + str(contigDict[i+1]) + '\n')
-        return
-    if start1 == start2 and end1 < end2: #overwrite previous position if contig 2 is longer than contig 1
-        curated_contigDict[i] = [chrom2,start2,end2,contigID2,Dir2,length2]
-        #print('FAIL -- Share start, contig2 longer' + '\n' + str(contigDict[i]) + '\n' + str(contigDict[i+1]))
-        logFile.write('FAIL -- Share start, contig2 longer' + '\n' + str(contigDict[i]) + '\n' + str(contigDict[i+1]) + '\n')
-        return
+	if start1 == start2 and end1 > end2:
+		#print('FAIL -- Share start, contig1 longer' + '\n' + str(contigDict[i]) + '\n' + str(contigDict[i+1]))
+		logFile.write('FAIL -- Share start, contig1 longer' + '\n' + str(contigDict[i]) + '\n' + str(contigDict[i+1]) + '\n')
+		return
+	if start1 == start2 and end1 < end2: #overwrite previous position if contig 2 is longer than contig 1
+		curated_contigDict[i] = [chrom2,start2,end2,contigID2,Dir2,length2]
+		#print('FAIL -- Share start, contig2 longer' + '\n' + str(contigDict[i]) + '\n' + str(contigDict[i+1]))
+		logFile.write('FAIL -- Share start, contig2 longer' + '\n' + str(contigDict[i]) + '\n' + str(contigDict[i+1]) + '\n')
+		return
 ###################################################################################################
 def process_same_ends(contigDict,curr_index,i):    
-    if start1 < start2 and end1 == end2:
-        #print('Ends same, kept contig 1 only' + '\n' + str(contigDict[i]) + '\n' + str(contigDict[i+1]))
-        logFile.write('Ends same, kept contig 1 only' + '\n' + str(contigDict[i]) + '\n' + str(contigDict[i+1]) + '\n')
-        return 
-    if start2 < start1 and end1 == end2: 
-        print('ERROR - is this contig list sorted??!!')
-        logFile.write('ERROR - is this contig list sorted??!!\n\n\n')
-        sys.exit(1)
+	if start1 < start2 and end1 == end2:
+		#print('Ends same, kept contig 1 only' + '\n' + str(contigDict[i]) + '\n' + str(contigDict[i+1]))
+		logFile.write('Ends same, kept contig 1 only' + '\n' + str(contigDict[i]) + '\n' + str(contigDict[i+1]) + '\n')
+		return 
+	if start2 < start1 and end1 == end2: 
+		print('ERROR - is this contig list sorted??!!')
+		logFile.write('ERROR - is this contig list sorted??!!\n\n\n')
+		sys.exit(1)
 ###################################################################################################
 def rename_keys(curated_contigDict):	
 	count, tempDict = 0, {}
@@ -148,25 +148,25 @@ def identify_golden_path(curated_contigDict):
 	return posDict
 ###################################################################################################
 def process_first_contig_on_chrom(chrom1,start1,end1,contigID1,Dir1,length1):
-    chrom2 = chrom1
-    start2 = start1 - 10000
-    end2 = start1 + 10000
-    contigID2 = 'canFam3'
-    Dir2 = 'fwd'
-    length1 = end2-start2
-    
-    if start2 < 0:
-        start2 = 0
-    
-    #Determine overlap 
-    determine_contig_overlap(end1, contigID1, Dir1, length1, end2, contigID2, Dir2, length2)
- 
-    #Find coordinates to extract
-    find_overlapping_coordinates(overlap,end1, contigID1, Dir1, length1, end2, contigID2, Dir2, length2)
-    
-    #Extract FASTA
-    fastaRoot = '/home/ampend/links/kidd-lab/jmkidd-projects/zoey/contig-assignment/kmer-matches/eval1/'
-    extract_fasta(fastaRoot,contigID1,Dir1,extract_coord1,contigID2,Dir2,extract_coord2)
+	chrom2 = chrom1
+	start2 = start1 - 10000
+	end2 = start1 + 10000
+	contigID2 = 'canFam3'
+	Dir2 = 'fwd'
+	length1 = end2-start2
+
+	if start2 < 0:
+		start2 = 0
+
+	#Determine overlap 
+	determine_contig_overlap(end1, contigID1, Dir1, length1, end2, contigID2, Dir2, length2)
+
+	#Find coordinates to extract
+	find_overlapping_coordinates(overlap,end1, contigID1, Dir1, length1, end2, contigID2, Dir2, length2)
+
+	#Extract FASTA
+	fastaRoot = '/home/ampend/links/kidd-lab/jmkidd-projects/zoey/contig-assignment/kmer-matches/eval1/'
+	extract_fasta(fastaRoot,contigID1,Dir1,extract_coord1,contigID2,Dir2,extract_coord2)
 ###################################################################################################
 def determine_contig_overlap(end1, contigID1, Dir1, length1, end2, contigID2, Dir2, length2):
 	#How much do the contigs overlap?
@@ -208,32 +208,28 @@ def find_overlapping_coordinates(overlap,end1, contigID1, Dir1, length1, end2, c
 
 	#safety check
 	for i in range(0,2): #CHECKS 
-		print('coord1', i, extract_coord1[i])
-		print('coord2', i, extract_coord2[i])
-		logFile.write('coord1' + str(i) + str(extract_coord1[i]) + '\n')
-		logFile.write('coord2' + str(i) + str(extract_coord2[i])+ '\n')
-		
-		#= if the region to extract extends beyond the length of the contig, if so then the coordinate changes to the length of contig
+		#If the region to extract extends beyond the length of the contig, if so then the coordinate changes to the length of contig
 		if extract_coord1[i] > length1:
 			extract_coord1[i] = length1
-			print('Fixed coord1 ', i, length1)	
-			logFile.write('Fixed coord1: i = %s    length1 = %s\n' % (str(i), str(length1))	
+			#print('Fixed coord1 ' + '\t' + str(i) + '\t' + str(length1))	
+			logFile.write('Fixed coord1: i = %s    length1 = %s\n' % (str(i), str(length1)))	
 		if extract_coord2[i] > length2:
 			extract_coord2[i] = length2
-			print('Fixed coord2 ', i, length2)	
-			logFile.write('Fixed coord2: i = %s    length2 = %s\n' % (str(i), str(length1))	
+			#print('Fixed coord2 ' + '\t' + str(i) + '\t' + str(length2))	
+			logFile.write('Fixed coord2: i = %s    length2 = %s\n' % (str(i), str(length1)))	
 		# If the region extended too far, and the value is negative -- then make starting extraction coordinate = 0
 		if extract_coord1[i] < 0: 
 			extract_coord1[i] = 0
-			print('Fixed coord1 ', i, 0)	
-			logFile.write('Fixed coord1: i = %s    start = 0\n' % (str(i))	
+			#print('Fixed coord1 ' '\t' + str(i) + '\t0')	
+			logFile.write('Fixed coord1: i = %s \t start = 0\n' % (str(i)))	
 		if extract_coord2[i] < 0:
 			extract_coord2[i] = 0
-			print('Fixed coord2 ', i, 0)	
-			logFile.write('Fixed coord2: i = %s    start = 0\n' % (str(i))	
-	logFile.write('FIXED coordinates to extract for BLAT: ' + str(extract_coord1) + str(extract_coord2) + '\n')
+			#print('Fixed coord2 ' + '\t' + str(i) + '\t0')	
+			logFile.write('Fixed coord2: i = %s \t start = 0\n' % (str(i)))	
+	
+	logFile.write('FIXED coordinates to extract for BLAT: ' + str(extract_coord1) + '\t' + str(extract_coord2) + '\n')
 	print('FIXED coordinates to extract for BLAT:\t' + str(extract_coord1) + '\t' + str(extract_coord2) + '\n')
-
+	
 	if overlap < 0: #### SEND TO DIFFERENT FUNCTION LATER -- FOLLOW OVERLAPPING CONTIGS FOR NOW
 		#print('Contigs do not overlap')
 		logFile.write('Contigs do not overlap\n')
@@ -265,6 +261,8 @@ def run_blat(wkDir):
 def parse_blat(wkDir,overlap,contigID1,Dir1,extract_coord1,contigID2,Dir2,extract_coord2):
 	inFile = open('%stemp/temp.blat' % (wkDir),'r')
 	lineCount, cleanAlignment, offset = 0, False, 0
+	matchHits = []
+	
 	for line in inFile:
 		line=line.rstrip().split('\t')
 		lineCount+=1
@@ -289,114 +287,117 @@ def parse_blat(wkDir,overlap,contigID1,Dir1,extract_coord1,contigID2,Dir2,extrac
 			logFile.write('length = %i, start = %i, end = %i' % (blat_length2, blat_start2, blat_end2))
 			#Calculate offset  - to compensate for non-clean alignments (extension of left contig that does not overlap with adjacent contig)
 			offset = calculate_offset(overlap,blat_length1, blat_start1, blat_end1,Dir1,blat_length2, blat_start2, blat_end2,Dir2)
-			return offset
+			cleanAlignment = True
+			return offset, cleanAlignment
+	if cleanAlignment is False:
+		return offset, cleanAlignment
 ###################################################################################################
 def calculate_offset(overlap,blat_length1, blat_start1, blat_end1,Dir1,blat_length2, blat_start2, blat_end2,Dir2):
-    global offset
-    if 'rc' in Dir1:
-        offset = blat_start1 - 0
-    else:
-        offset = blat_length1 - blat_end1
-    if offset < 3:
-        offset = 0
-    #print('\nBLAT offset = ', offset)
-    logFile.write('\nBLAT offset = ' + str(offset) + '\n')
-    return offset
+	global offset
+	if 'rc' in Dir1:
+		offset = blat_start1 - 0
+	else:
+		offset = blat_length1 - blat_end1
+	if offset < 3:
+		offset = 0
+	#print('\nBLAT offset = ', offset)
+	logFile.write('\nBLAT offset = ' + str(offset) + '\n')
+	return offset
 ###################################################################################################
 
 ###################################################################################################
 # STEP FOUR
 ###################################################################################################
 def process_first_agp_contig(agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig):
-    agp_prev_chrom, agp_prev_overlap, prev_offset = agp_chrom, 0, 0
-    
-    if direction == 'fwd':
-        direction = '+' #changes notation of the direction
-    if direction == 'rc':
-        direction = '-'  #changes notation of the direction
-    
-    #Specially process those with offsets > 0
-    if offset > 0 or prev_offset > 0:
-        info = process_blat_offsets(agp_prev_chrom, agp_prev_overlap, prev_offset, agp_start, agp_end, overlap, offset,direction)
-    #Those with BLAT offsets = 0
-    else:
-        agp_start, agp_end = 1, length
-        contig_start, contig_end = 1, length
-        info = [agp_prev_chrom,agp_prev_overlap,agp_start, agp_end,contig_start,contig_end,direction,offset]
-    
-    return info
+	agp_prev_chrom, agp_prev_overlap, prev_offset = agp_chrom, 0, 0
+
+	agp_start, agp_end = 1, length
+	if direction == 'fwd':
+		direction = '+' #changes notation of the direction
+	if direction == 'rc':
+		direction = '-'  #changes notation of the direction
+
+	#Specially process those with offsets > 0
+	if offset > 0 or prev_offset > 0:
+		info = process_blat_offsets(agp_prev_chrom, agp_prev_overlap, prev_offset, agp_start, agp_end, overlap, offset,direction)
+	#Those with BLAT offsets = 0
+	else:
+		agp_start, agp_end = 1, length
+		contig_start, contig_end = 1, length
+		info = [agp_prev_chrom,agp_prev_overlap,agp_start, agp_end,contig_start,contig_end,direction,offset]
+
+	return info
 ###################################################################################################
 def process_blat_offsets(agp_prev_chrom, agp_prev_overlap, prev_offset, agp_start, agp_end, overlap, offset,direction):
-    if agp_prev_overlap < 5 and agp_prev_overlap > 0:
-        agp_prev_overlap = 0
-        
-    if prev_offset ==0  and offset > 0: #contig left of offset
-        agp_start = agp_end + 1
-        agp_end = agp_start + length + agp_prev_overlap
+	if agp_prev_overlap < 5 and agp_prev_overlap > 0:
+		agp_prev_overlap = 0
+	
+	if prev_offset ==0  and offset > 0: #contig left of offset
+		agp_start = agp_end + 1
+		agp_end = agp_start + length + agp_prev_overlap
 
-        #Determine contig coordinates that align
-        if direction == 'fwd':
-            direction = '+' #changes notation of the direction
-            contig_start = 1 + agp_prev_overlap
-            contig_end = length
-        if direction == 'rc':
-            direction = '-'  #changes notation of the direction
-            contig_start = 1
-            contig_end = length - agp_prev_overlap
+		#Determine contig coordinates that align
+		if direction == 'fwd':
+			direction = '+' #changes notation of the direction
+			contig_start = 1 + agp_prev_overlap
+			contig_end = length
+		if direction == 'rc':
+			direction = '-'  #changes notation of the direction
+			contig_start = 1
+			contig_end = length - agp_prev_overlap
 
-    if prev_offset > 0 and offset == 0: #contig right of offset
-        agp_start = agp_end + 500 + 1 #compensate for added gap between the two which has length = 500
-        agp_end = agp_start + length + agp_prev_overlap
+	if prev_offset > 0:# and offset == 0: #contig right of offset
+		agp_start = agp_end + 500 + 1 #compensate for added gap between the two which has length = 500
+		agp_end = agp_start + length + agp_prev_overlap
 
-        if direction == 'fwd':
-            direction = '+' #changes notation of the direction
-            contig_start = 1 + agp_prev_overlap
-            contig_end = length
-        if direction == 'rc':
-            direction = '-'  #changes notation of the direction
-            contig_start = 1
-            contig_end = length - agp_prev_overlap  
-            
-    if prev_offset > 0 and offset > 0:
-        print('This type of alignment needs to be readdressed...\n')
-        sys.exit()
-        
-        
-    info = [agp_prev_chrom,agp_prev_overlap,agp_start, agp_end,contig_start,contig_end,direction,offset]
-    
-    return info
+		if direction == 'fwd':
+			direction = '+' #changes notation of the direction
+			contig_start = 1 + agp_prev_overlap
+			contig_end = length
+		if direction == 'rc':
+			direction = '-'  #changes notation of the direction
+			contig_start = 1
+			contig_end = length - agp_prev_overlap  
+		
+	#if prev_offset > 0 and offset > 0:
+	#	print('This type of alignment needs to be readdressed...\n')
+	#	sys.exit()
+	
+	info = [agp_prev_chrom,agp_prev_overlap,agp_start, agp_end,contig_start,contig_end,direction,offset]
+
+	return info
 ###################################################################################################
 def process_next_agp_contig(agp_chrom, direction, length, overlap, offset, pairedContig, agp_start, agp_end):
-    agp_prev_chrom, agp_prev_overlap, prev_offset = posDict[i-1][0], int(posDict[i-1][6]),int(posDict[i-1][7])
-    
-    #Specially address those with BLAT offsets (unaligned sequence at the junctions)
-    if prev_offset > 0 or offset > 0:
-        info = process_blat_offsets(agp_prev_chrom, agp_prev_overlap, prev_offset, agp_start, agp_end, overlap, offset,direction)
-        return info
-    
-    #Junctions without unaligned sequence(s):
-    else:
-        if agp_prev_overlap < 5:
-            agp_prev_overlap = 0
+	agp_prev_chrom, agp_prev_overlap, prev_offset = posDict[i-1][0], int(posDict[i-1][6]),int(posDict[i-1][7])
 
-        #Determine contig coordinates that align
-        if direction == 'fwd':
-            direction = '+' #changes notation of the direction
-            contig_start = 1 + agp_prev_overlap
-            contig_end = length
-        if direction == 'rc':
-            direction = '-'  #changes notation of the direction
-            contig_start = 1
-            contig_end = length - agp_prev_overlap
-        
-        shift = contig_end - contig_start
+	#Specially address those with BLAT offsets (unaligned sequence at the junctions)
+	if prev_offset > 0 or offset > 0:
+		info = process_blat_offsets(agp_prev_chrom, agp_prev_overlap, prev_offset, agp_start, agp_end, overlap, offset,direction)
+		return info
 
-        #now calculate the AGP coordinates of where the contig goes
-        agp_start = agp_end + 1
-        agp_end = agp_start + shift #+ 1
-        
-        info = [agp_prev_chrom,agp_prev_overlap,agp_start, agp_end,contig_start,contig_end,direction,offset]
-        return info               
+	#Junctions without unaligned sequence(s):
+	else:
+		if agp_prev_overlap < 5:
+			agp_prev_overlap = 0
+
+		#Determine contig coordinates that align
+		if direction == 'fwd':
+			direction = '+' #changes notation of the direction
+			contig_start = 1 + agp_prev_overlap
+			contig_end = length
+		if direction == 'rc':
+			direction = '-'  #changes notation of the direction
+			contig_start = 1
+			contig_end = length - agp_prev_overlap
+	
+		shift = contig_end - contig_start
+
+		#now calculate the AGP coordinates of where the contig goes
+		agp_start = agp_end + 1
+		agp_end = agp_start + shift #+ 1
+	
+		info = [agp_prev_chrom,agp_prev_overlap,agp_start, agp_end,contig_start,contig_end,direction,offset]
+		return info
 ###################################################################################################
 def process_agp_GAP(agp_chrom, direction, length, overlap, offset, pairedContig, agp_start, agp_end):
     gap_length = 10000
@@ -586,8 +587,8 @@ chrom_lengths = get_chrom_lengths()
 
 for i in chrom_lengths:
 	CHROM = i #Chromosome being processed
-	if 'chrX' not in CHROM:
-		continue
+	#if 'chr18' not in CHROM:
+	#	continue
 	#Each step will save the results and processes to a logfile also defined below.
 	logFile = open(wkDir + 'results/AGP_v1.0/logs/ZoeyAGP_LogFile_' + CHROM + '_v1.txt','w')
 	logFile.write('\n\n#########Processing %s\n' % CHROM)
@@ -713,6 +714,7 @@ for i in chrom_lengths:
 		#1. Reading in coordinates from contigList
 		chrom1,start1,end1,contigID1,Dir1,length1,chrom2,start2,end2,contigID2,Dir2,length2 = read_line(curated_contigDict, curr_index, i)
 		logFile.write('\n##   Contig %s    ---    Contig %s\n\n' % (contigID1, contigID2))
+		
 		#2. Checking contigs are on same chromosome
 		if chrom1 != chrom2:# or i == 1: #This is first contig on chromosome, need to process it first
 			continue
@@ -720,16 +722,23 @@ for i in chrom_lengths:
 		#3. Determines the overlap/orientation of the two contigs
 		determine_contig_overlap(end1,contigID1,Dir1,length1,end2,contigID2,Dir2,length2)
 		
-		#4. BLAT the properly oriented contig ends against one another
-		#     and parse the results
+		#4. BLAT the properly oriented contig ends against one another and parse the results
 		if overlap > 0:
 			run_blat(wkDir)
-			parse_blat(wkDir,overlap,contigID1,Dir1,extract_coord1,contigID2,Dir2,extract_coord2)
+			offset, cleanAlignment = parse_blat(wkDir,overlap,contigID1,Dir1,extract_coord1,contigID2,Dir2,extract_coord2)
 		else:
-			offset = 0
+			offset, cleanAlignment = 0, True
+			
+		#5. More closely examine the contigs that did not have a strong BLAT hit
+		#process_poor_BLAT_hits()
+		if cleanAlignment is False and overlap > 0:
+			if curr_index + 1 <= len(curated_contigDict):
+				offset = 1000000 # DEFAULT HUGE NUMBER -- NEED TO PUT GAPS UPSTREAM OF THIS CONTIG
+				
+		#Keep track of those that have BLAT based offsets
 		if offset > 0:
-			offset_BLAT.append([contigID1,Dir1,extract_coord1,contigID2,Dir2,extract_coord2,overlap])
-		
+			offset_BLAT.append([contigID1,Dir1,extract_coord1,contigID2,Dir2,extract_coord2,overlap,offset])
+
 		#save contig1 information to dictionary
 		posDict[curr_index] = [chrom1,start1,end1,contigID1,Dir1,length1,overlap,offset,contigID2]
 	
@@ -738,8 +747,10 @@ for i in chrom_lengths:
 		logFile.write(str(posDict[i]) + '\n')
 	
 	print('%i elements in position dictionary from Zoey PacBio contigs on %s....' % (len(posDict),CHROM))
+
 	print('STEP THREE: DONE!')
-	break
+	
+	
 	####################################################
 	#STEP FOUR - WRITE AGP FILE
 	####################################################
@@ -777,7 +788,7 @@ for i in chrom_lengths:
 					agp.append([agp_chrom, agp_end+1, agp_end+499, count, 'U', '500','BLAT_gap','no','na'])
 					#print(agp_chrom, agp_end+1, agp_end+501, count, 'U', '500','BLAT_gap','no','na')
 				else:
-					agp.append([agp_chrom, agp_start, agp_end, count, 'D', contigID, contig_start, contig_end, direction])         
+					agp.append([agp_chrom, agp_start, agp_end, count, 'D', contigID, contig_start, contig_end, direction])
 					#print(agp_prev_chrom,agp_prev_overlap,agp_start, agp_end, contig_start,contig_end,direction)
 			else: #if contigs do not overlap --> GAP!
 				#process contig to the left of the gap
@@ -792,13 +803,11 @@ for i in chrom_lengths:
 				agp_chrom,agp_start,agp_end,gap_type,gap_length,agp_prev_overlap = gap_info[0:7]
 				agp.append([agp_chrom,agp_start,agp_end,count,'U',gap_length,gap_type,'no','na'])
 				#print(agp_chrom,agp_start,agp_end,count,'U',gap_length,gap_type,'no','na')
-		"""if count > 5:
-			break"""
 
 	#Write AGP header lines
 	write_AGP_header(agpFile)
 	
-	logFile.write('AGP file for %s' % CHROM)
+	logFile.write('AGP file for %s\n' % CHROM)
 	#Write out to agp File the information for contigs/gaps
 	for i in range(0,len(agp)):
 		agpFile.write("\t".join(map(str,agp[i])) + '\n')
@@ -807,7 +816,7 @@ for i in chrom_lengths:
 	logFile.close()
 
 	print('STEP FOUR: DONE!')
-	
+
 	####################################################
 	#STEP FIVE - MAKE AGP FASTA FILE FROM AGP TXT FILE FROM STEP FOUR
 	####################################################
@@ -928,4 +937,4 @@ for i in chrom_lengths:
 	
 	#break
 	logFile.close()
-	print '\n\####\n%s DONE!!!\n#####\n\n\n\n'
+	print('\n####\n%s DONE!!!\n#####\n\n\n\n' % (CHROM))
