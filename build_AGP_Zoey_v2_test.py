@@ -420,7 +420,7 @@ def parse_blat(wkDir,overlap,contigID1,Dir1,extract_coord1,contigID2,Dir2,extrac
 ###################################################################################################
 def calculate_offset(overlap,blat_length1, blat_start1, blat_end1,Dir1,blat_length2, blat_start2, blat_end2,Dir2):
 	global offset
-	if 'rc' in Dir1:
+	if 'rc' in Dir1 or '-' in Dir1:
 		offset = blat_start1 - 0
 	else:
 		offset = blat_length1 - blat_end1
@@ -457,12 +457,7 @@ def process_first_agp_contig(agp_chrom, start, end, contigID, direction, length,
 def process_blat_offsets(agp_prev_chrom, agp_prev_overlap, prev_offset, agp_start, agp_end, overlap, offset,direction, length):
 	if agp_prev_overlap < 5 and agp_prev_overlap > 0:
 		agp_prev_overlap = 0
-	"""print('\ncontig = ', contigID)
-	print('agp_prev_overlap = ',agp_prev_overlap)
-	print('prev_offset = ', prev_offset)
-	print('offset = ', offset)
-	print('length = ', length)
-	print('overlap = ', overlap)"""
+
 	if prev_offset ==0  and offset > 0: #contig left of offset
 		if agp_prev_overlap >= 0:
 			agp_start = agp_end + 1
@@ -498,9 +493,7 @@ def process_blat_offsets(agp_prev_chrom, agp_prev_overlap, prev_offset, agp_star
 		return info
 
 	if prev_offset > 0:# and offset == 0: #contig right of offset
-		if 'CTG-2111' in contigID or 'CTG-2031' in contigID:
-			print('HEREEEE #3!!!', contigID)
-			sys.exit()
+		print('HEREEEE #3!!!', contigID)
 		agp_start = agp_end + 500 + 1 #compensate for added gap between the two which has length = 500
 		agp_end = agp_start + length + agp_prev_overlap
 
@@ -532,8 +525,7 @@ def process_next_agp_contig(agp_chrom, direction, length, overlap, offset, paire
 
 	#Specially address those with BLAT offsets (unaligned sequence at the junctions)
 	if prev_offset > 0 or offset > 0:
-		if 'CTG-2111' in contigID or 'CTG-2031' in contigID:
-			print('HEREEEE #4!!!',contigID)
+		print('HEREEEE #4!!!',contigID)
 		info = process_blat_offsets(agp_prev_chrom, agp_prev_overlap, prev_offset, agp_start, agp_end, overlap, offset,direction,length)
 		return info
 
@@ -541,16 +533,15 @@ def process_next_agp_contig(agp_chrom, direction, length, overlap, offset, paire
 	else:
 		if agp_prev_overlap < 5:
 			agp_prev_overlap = 0
-		if 'CTG-2111' in contigID or 'CTG-2031' in contigID:
-			print('HEREEEE #5!!!',contigID)
-			print('agp_prev_chrom, agp_prev_overlap, prev_offset',agp_prev_chrom, agp_prev_overlap, prev_offset)
-			print('agp_prev_chrom, agp_prev_overlap, prev_offset, agp_start, agp_end, overlap, offset,direction,length',agp_prev_chrom, agp_prev_overlap, prev_offset, agp_start, agp_end, overlap, offset,direction,length)
+		print('HEREEEE #5!!!',contigID)
+		print('agp_prev_chrom, agp_prev_overlap, prev_offset',agp_prev_chrom, agp_prev_overlap, prev_offset)
+		print('agp_prev_chrom, agp_prev_overlap, prev_offset, agp_start, agp_end, overlap, offset,direction,length',agp_prev_chrom, agp_prev_overlap, prev_offset, agp_start, agp_end, overlap, offset,direction,length)
 		#Determine contig coordinates that align
-		if direction == 'fwd':
+		if direction == 'fwd' or direction == '+':
 			direction = '+' #changes notation of the direction
 			contig_start = 1 + agp_prev_overlap
 			contig_end = length
-		if direction == 'rc':
+		if direction == 'rc' or direction == '-':
 			direction = '-'  #changes notation of the direction
 			contig_start = 1
 			contig_end = length - agp_prev_overlap
@@ -878,7 +869,6 @@ for i in chrom_lengths:
 	for i in curated_contigDict:
 		logFile.write(str(curated_contigDict[i]) + '\n')
 	print('STEP TWO: DONE!')
-
 	
 	####################################################
 	#STEP THREE - BLAT CURATED CONTIG SET TO IDENTIFY GOLDEN PATH 
@@ -887,6 +877,7 @@ for i in chrom_lengths:
 	posDict, offset_BLAT = {}, []
 	for i in range(1,len(curated_contigDict)+1): 
 		curr_index = i
+		print(i,curr_index)
 		offset = 0 #set equal to zero at beginning, will change if there is one from parsing the blat hit(s)
 		
 		#LAST CONTIG == If last entry, automatically goes in
@@ -928,16 +919,18 @@ for i in chrom_lengths:
 		#save contig1 information to dictionary
 		posDict[curr_index] = [chrom1,start1,end1,contigID1,Dir1,length1,overlap,offset,contigID2]
 		print(posDict[curr_index])
-		
-	logFile.write('\nposDict for %s\n' % CHROM)
+
+	logFile.write('\nposDict for %s\n\n\n' % CHROM)
+	print('\nposDict for %s\n\n\n' % CHROM)
 	for i in posDict:
 		logFile.write(str(posDict[i]) + '\n')
 		print(posDict[i])
 
+	#Write out results at this stage
 	print('%i elements in position dictionary from Zoey PacBio contigs on %s....' % (len(posDict),CHROM))
-
 	print('STEP THREE: DONE!')
-	
+	logFile.write('\n%i elements in position dictionary from Zoey PacBio contigs on %s....\n' % (len(posDict),CHROM))
+	logFile.write('\nSTEP THREE: DONE!\n\n')	
 	"""
 	####################################################
 	#STEP FOUR - INCORPORATE CANU SPANNED GAPS
@@ -1025,15 +1018,13 @@ for i in chrom_lengths:
 			if z_next_ID == overlapping_ID:
 				count += 1
 				totalDict[count] = contigGap_PosDict[i]
-			"""else:
-				print('doesnt work')"""
 
 	print('The total AGP will now include %i elements (Zoey PacBio contigs (CTG-XXXX) and spanned gaps (chrX_N))' % len(totalDict))
 	print('STEP FOUR: DONE!')
 	"""
 
 	####################################################
-	#STEP FIVE - WRITE AGP FILE
+	#STEP FOUR - WRITE AGP FILE
 	####################################################
 
 	#Defining AGP outfile
@@ -1042,17 +1033,15 @@ for i in chrom_lengths:
 	#Now putting them in the coordinates of the Zoey genome!! :) 
 	count, agp = 0, [] 
 	
-	
 	for i in posDict:
 		count += 1
 		print(i, posDict[i])
 		agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig = posDict[i][0:9]
 		#if 'CTG-2111' in contigID or 'CTG-2031' in contigID:
-		#	print('CONTIG = ', contigID)
-		#	print('agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig',agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig)
-		#KEEPING TRACK - TESTING
-
-		if 'chr' in pairedContig: #this is a filled gap --- needs to be processed and added to the AGP
+		print('CONTIG = ', contigID)
+		print('agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig',agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig)
+		
+		"""if 'chr' in pairedContig: #this is a filled gap --- needs to be processed and added to the AGP
 			#for j in contigGap_PosDict:
 				#if pairedContig in contigGap_PosDict[j][3]:
 				#	process_filled_gap(contigGap_PosDict[j][3])
@@ -1085,10 +1074,8 @@ for i in chrom_lengths:
 				gap_info = process_agp_GAP(agp_chrom, direction, length, overlap, offset, pairedContig, agp_start, agp_end)
 				agp_chrom,agp_start,agp_end,gap_type,gap_length,agp_prev_overlap = gap_info[0:7]
 				agp.append([agp_chrom,agp_start,agp_end,count,'U',gap_length,gap_type,'no','na'])
-				#print(agp_chrom,agp_start,agp_end,count,'U',gap_length,gap_type,'no','na')
+				#print(agp_chrom,agp_start,agp_end,count,'U',gap_length,gap_type,'no','na')"""
 
-		if i == 8:
-			sys.exit()
 		#print('\n#',contigID)
 	
 		#Processing first contig in dataset -OR- on a new chromosome
@@ -1102,9 +1089,8 @@ for i in chrom_lengths:
 		#Process next contig (not first contig on chrom)
 		else:
 			if overlap >= 0: #if contigs overlap --> NO GAP!
-				if 'CTG-2111' in contigID or 'CTG-2031' in contigID:
-					print('HEREEEE #1!!!',contigID)
-					#sys.exit()
+				print('HEREEEE #1!!!',contigID)
+				
 				info = process_next_agp_contig(agp_chrom, direction, length, overlap, offset, pairedContig, agp_start, agp_end)
 				agp_prev_chrom,agp_prev_overlap,agp_start, agp_end, contig_start,contig_end,direction,offset = info[0:10]
 				if offset > 0:
@@ -1118,25 +1104,21 @@ for i in chrom_lengths:
 				else:
 					agp.append([agp_chrom, agp_start, agp_end, count, 'D', contigID, contig_start, contig_end, direction])
 					#print(agp_prev_chrom,agp_prev_overlap,agp_start, agp_end, contig_start,contig_end,direction)
+			
 			else: #if contigs do not overlap --> GAP!
-				if 'CTG-2111' in contigID or 'CTG-2031' in contigID:
-					print('HEREEEE #2!!!',contigID)
-					#sys.exit()
+				print('HEREEEE #2!!!',contigID)	
 				#process contig to the left of the gap
 				info = process_next_agp_contig(agp_chrom, direction, length, overlap, offset, pairedContig, agp_start, agp_end)
 				agp_prev_chrom,agp_prev_overlap,agp_start, agp_end, contig_start,contig_end,direction,offset = info[0:10]
 				agp.append([agp_chrom, agp_start, agp_end, count, 'D', contigID, contig_start, contig_end, direction])
-				#print(agp_chrom, agp_start, agp_end, count, 'D', contigID, contig_start, contig_end, direction)
-			
+							
 				#processing gap
 				count += 1
 				gap_info = process_agp_GAP(agp_chrom, direction, length, overlap, offset, pairedContig, agp_start, agp_end)
 				agp_chrom,agp_start,agp_end,gap_type,gap_length,agp_prev_overlap = gap_info[0:7]
 				agp.append([agp_chrom,agp_start,agp_end,count,'U',gap_length,gap_type,'no','na'])
-				#print(agp_chrom,agp_start,agp_end,count,'U',gap_length,gap_type,'no','na')
+				
 		
-		#if 'CTG-2111' in contigID:
-		#	sys.exit()
 
 	#Write AGP header lines
 	write_AGP_header(agpFile,version)
@@ -1146,11 +1128,12 @@ for i in chrom_lengths:
 	for i in range(0,len(agp)):
 		agpFile.write("\t".join(map(str,agp[i])) + '\n')
 		logFile.write("\t".join(map(str,agp[i])) + '\n')
+		print("\t".join(map(str,agp[i])))
 	agpFile.close()
 
-	print('STEP FIVE: DONE!')
-	logFile.write('STEP FIVE: DONE!\n\n\n')
-	sys.exit()
+	print('STEP FOUR: DONE!')
+	logFile.write('STEP FOUR: DONE!\n\n\n')
+
 	####################################################
 	#STEP SIX - MAKE AGP FASTA FILE FROM AGP TXT FILE FROM STEP FOUR
 	####################################################
