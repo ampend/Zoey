@@ -69,7 +69,7 @@ def make_infile(wkDir):
 	print(cmd)
 	subprocess.call(cmd,shell=True)
 	print('NEW INPUT FILE WITH MERGED CONTIGS AND FILLED GAPS CAN BE FOUND HERE:')
-	print(outBed)
+	print(outBed)#Makes a merged, sorted bedfile with the Falcon and CANU contigs together 
 ###################################################################################################
 def find_gap_length(contigID):
 	gappath = '/home/ampend/links/kidd-lab/ampend-projects/Zoey_Genome_Project/AGP/input/filled_gaps/gap_fastas/'
@@ -86,7 +86,7 @@ def find_gap_length(contigID):
 			Length = 'na'
 		break
 	tempFile.close()
-	return Length
+	return Length#DONT USE THIS ANYMORE - INCORPORATED INTO FORMAT_GAPS.PY
 ###################################################################################################
 def fix_fasta_identifier(contigID):
 	gappath = '/home/ampend/links/kidd-lab/ampend-projects/Zoey_Genome_Project/AGP/input/filled_gaps/gap_fastas/'
@@ -107,7 +107,7 @@ def fix_fasta_identifier(contigID):
 	cmd = 'cp %s %s' % (tempfile,gapfile)
 	print(cmd)
 	subprocess.call(cmd,shell=True)
-	gapFile.close()
+	gapFile.close() #DONT USE THIS ANYMORE - INCORPORATED INTO FORMAT_GAPS.PY
 ###################################################################################################
 def get_chrom_lengths():
 	chrom_length_file = open(wkDir + 'input/cyto_band.bed','r')
@@ -120,6 +120,7 @@ def get_chrom_lengths():
 		
 	chrom_length_file.close()
 	return chrom_lengths
+###################################################################################################
 
 
 ###################################################################################################
@@ -368,15 +369,13 @@ def find_overlapping_coordinates(overlap,end1, contigID1, Dir1, length1, end2, c
 		fasta_path = fastaRoot + contigID2 + '.quiver.fa'
 		print fasta_path
 		extract_fasta(fastaRoot,contigID2,Dir2,extract_coord2, contigNumber, fasta_path)
-
 ###################################################################################################
 def extract_fasta(fastaRoot,contigID,Dir,extract_coord,contigNumber,fasta_path):
 	#Contig 1
 	cmd = 'samtools faidx %s %s:%i-%i  > %stemp/contig%s.fa' % (fasta_path,contigID,extract_coord[0],extract_coord[1],wkDir,contigNumber)
 	print(cmd)
 	logFile.write(cmd + '\n')
-	subprocess.call(cmd,shell=True)
- 
+	subprocess.call(cmd,shell=True) 
 ###################################################################################################
 def run_blat(wkDir):
 	blatcmd = 'blat %stemp/contig1.fa %stemp/contig2.fa %stemp/temp.blat' % (wkDir,wkDir,wkDir)
@@ -432,7 +431,7 @@ def calculate_offset(overlap,blat_length1, blat_start1, blat_end1,Dir1,blat_leng
 ###################################################################################################
 
 ###################################################################################################
-# STEP FIVE
+# STEP FOUR
 ###################################################################################################
 def process_first_agp_contig(agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig):
 	agp_prev_chrom, agp_prev_overlap, prev_offset = agp_chrom, 0, 0
@@ -474,7 +473,10 @@ def process_blat_offsets(agp_prev_chrom, agp_prev_overlap, prev_offset, agp_star
 				contig_end = length - agp_prev_overlap
 			if contig_end < 0 or contig_start < 0:
 				print('ERROR 5a. Why are the contig starts and ends less than zero?')
-				sys.exit()
+				logFile.write('ERROR 5a. Why are the contig starts and ends less than zero?\n')
+				logFile.write('Making the contig end = length ---- readdress\n\n')
+				contig_end = length
+				#sys.exit()
 		else:
 			agp_start = agp_end + 1
 			agp_end = agp_start + length + agp_prev_overlap
@@ -576,7 +578,7 @@ def write_AGP_header(agpFile,version): #alter for each assembly
 ###################################################################################################
 
 ###################################################################################################
-# STEP SIX
+# STEP FIVE
 ###################################################################################################
 def extract_contig_fasta(fastaRoot,contigID,orient,extract_coord1,extract_coord2):
     #Contig 1
@@ -642,7 +644,7 @@ def reformat_fasta_file(wkDir,CHROM):
 ###################################################################################################    
 
 ###################################################################################################
-# STEP SEVEN - CONTINUITY
+# STEP SIX - CONTINUITY
 ###################################################################################################
 def calculate_canFam_continuity(CHROM):
 	gapFile = open(wkDir + 'input/gaps.bed.sorted','r')
@@ -931,97 +933,6 @@ for i in chrom_lengths:
 	print('STEP THREE: DONE!')
 	logFile.write('\n%i elements in position dictionary from Zoey PacBio contigs on %s....\n' % (len(posDict),CHROM))
 	logFile.write('\nSTEP THREE: DONE!\n\n')	
-	"""
-	####################################################
-	#STEP FOUR - INCORPORATE CANU SPANNED GAPS
-	####################################################
-	
-	contigGapFile = open(wkDir + 'input/filled_gaps/' + 'gaps_fill.bed.sorted','r')
-	contigGap_PosDict, contigGapCount = {}, 0
-
-	#Starting index for me to add the gap information to the contig posDict dictionary
-	#	== length of the posDict dictionary
-	startIndex = len(posDict)
-
-	for line in contigGapFile:
-		line=line.rstrip().split('\t')
-	
-		filledGap_Chrom, filledGap_Start, filledGap_End, filledGap_Dir, filledGap_ID = line[0],int(line[1]),int(line[2]),line[3],line[4]
-		#If not on correct chromosome, skip
-		if filledGap_Chrom != CHROM:
-			continue
-		contigGapCount+=1
-		
-		if '+' in filledGap_Dir:
-			filledGap_Dir = 'fwd'
-		else:
-			filledGap_Dir = 'rc'
-		filledGap_ID = filledGap_ID.replace('.fa','')
-	
-		for i in range(1,len(posDict)):
-			z_chrom, z_start, z_end, z_ID, z_gap, z_overlap = posDict[i][0],int(posDict[i][1]),int(posDict[i][2]),posDict[i][3],int(posDict[i][6]),int(posDict[i][7])
-			z_next_chrom, z_next_start, z_next_end, z_next_ID = posDict[i+1][0],int(posDict[i+1][1]),int(posDict[i+1][2]),posDict[i+1][3]
-			
-			if z_chrom != filledGap_Chrom:
-				print('ERROR: not same chrom')
-				sys.exit()
-			if filledGap_Start < z_end and filledGap_End > z_end:
-				if filledGap_Start < z_next_start and filledGap_End > z_next_start:
-					filledGapLength = filledGap_End - filledGap_Start + 1
-					#calculate the new overlap value for the contig to the left of the filled gap
-					prev_overlap = z_end - filledGap_Start
-				
-					#Calculate the overlap with the filled gap contig and the zoey contig to the right of the filled gap
-					filledGapOverlap = filledGap_End - z_next_start
-				
-					#add the information for this filled gap to its dictionary
-					contigGap_PosDict[contigGapCount] = [filledGap_Chrom, filledGap_Start, filledGap_End, filledGap_ID, filledGap_Dir, filledGapLength, filledGapOverlap, int('0'), z_next_ID]
-
-					#reset the previous contigs' overlap values and offset values equal to zero
-					posDict[i][6],posDict[i][7],posDict[i][8] = prev_overlap,int('0'),filledGap_ID
-
-	contigGapFile.close() 
-	print('Placed %i filled contig-contig gap(s)' % contigGapCount)
-	
-	#####CONTIG GAP DATA ADDED TO CONTIG POSDICT#####	
-	logFile.write('\nCONTIG GAP posDict ONLY %s\n' % CHROM)
-	for i in contigGap_PosDict:
-		logFile.write(str(contigGap_PosDict[i]) + '\n')
- 
- 	####Printing out new posDict dictionary that now has contigs + gaps####
-	logFile.write('\nCONTIGS with filled GAPS on %s\n' % CHROM)
- 	for i in posDict:
-		logFile.write(str(posDict[i]) + '\n')
-
-	
-
-
-	############
-	## CHECK - chromosome stats so far
-	############
-	
-	count, totalDict = 0, {}
-	for j in range(1, len(posDict)+1):
-		count += 1
-		if j == len(posDict):
-			totalDict[count] = posDict[j]
-			continue
-		z_chrom, z_start, z_end = posDict[j][0],int(posDict[j][1]),int(posDict[j][2])
-		z_next_chrom, z_next_start, z_next_end, z_next_ID = posDict[j+1][0],int(posDict[j+1][1]),int(posDict[j+1][2]),posDict[j+1][3]
-		totalDict[count] = posDict[j]
-		for i in contigGap_PosDict:
-			filledGap_Chrom, filledGap_Start, filledGap_End, overlapping_ID = contigGap_PosDict[i][0],int(contigGap_PosDict[i][1]),int(contigGap_PosDict[i][2]),contigGap_PosDict[i][8]
-			#print(z_next_ID, overlapping_ID)
-			if z_chrom != filledGap_Chrom:
-				print('ERROR: not same chrom!!')
-				sys.exit()
-			if z_next_ID == overlapping_ID:
-				count += 1
-				totalDict[count] = contigGap_PosDict[i]
-
-	print('The total AGP will now include %i elements (Zoey PacBio contigs (CTG-XXXX) and spanned gaps (chrX_N))' % len(totalDict))
-	print('STEP FOUR: DONE!')
-	"""
 
 	####################################################
 	#STEP FOUR - WRITE AGP FILE
@@ -1038,46 +949,9 @@ for i in chrom_lengths:
 		print(i, posDict[i])
 		agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig = posDict[i][0:9]
 		#if 'CTG-2111' in contigID or 'CTG-2031' in contigID:
-		print('CONTIG = ', contigID)
-		print('agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig',agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig)
-		
-		"""if 'chr' in pairedContig: #this is a filled gap --- needs to be processed and added to the AGP
-			#for j in contigGap_PosDict:
-				#if pairedContig in contigGap_PosDict[j][3]:
-				#	process_filled_gap(contigGap_PosDict[j][3])
-				if overlap >= 0: #if contigs overlap --> NO GAP!
-					info = process_next_agp_contig(agp_chrom, direction, length, overlap, offset, pairedContig, agp_start, agp_end)
-					agp_prev_chrom,agp_prev_overlap,agp_start, agp_end, contig_start,contig_end,direction,offset = info[0:10]
-				if offset > 0:
-					#Add contig to the left of the gap
-					agp.append([agp_chrom, agp_start, agp_end, count, 'D', contigID, contig_start, contig_end, direction])
-					#print(agp_prev_chrom,agp_start, agp_end, contig_start,contig_end,direction,agp_prev_overlap)
-					#Add introduced gap from unaligned sequences from contig-contig junction BLAT
-					count += 1
-					agp.append([agp_chrom, agp_end+1, agp_end+499, count, 'U', '500','BLAT_gap','no','na'])
-					#print(agp_chrom, agp_end+1, agp_end+501, count, 'U', '500','BLAT_gap','no','na')
-				else:
-					agp.append([agp_chrom, agp_start, agp_end, count, 'D', contigID, contig_start, contig_end, direction])
-					#print(agp_prev_chrom,agp_prev_overlap,agp_start, agp_end, contig_start,contig_end,direction)
-			else: #if contigs do not overlap --> GAP!
-				if 'CTG-2111' in contigID or 'CTG-2031' in contigID:
-					print('HEREEEE #2!!!',contigID)
-					#sys.exit()
-				#process contig to the left of the gap
-				info = process_next_agp_contig(agp_chrom, direction, length, overlap, offset, pairedContig, agp_start, agp_end)
-				agp_prev_chrom,agp_prev_overlap,agp_start, agp_end, contig_start,contig_end,direction,offset = info[0:10]
-				agp.append([agp_chrom, agp_start, agp_end, count, 'D', contigID, contig_start, contig_end, direction])
-				#print(agp_chrom, agp_start, agp_end, count, 'D', contigID, contig_start, contig_end, direction)
-			
-				#processing gap
-				count += 1
-				gap_info = process_agp_GAP(agp_chrom, direction, length, overlap, offset, pairedContig, agp_start, agp_end)
-				agp_chrom,agp_start,agp_end,gap_type,gap_length,agp_prev_overlap = gap_info[0:7]
-				agp.append([agp_chrom,agp_start,agp_end,count,'U',gap_length,gap_type,'no','na'])
-				#print(agp_chrom,agp_start,agp_end,count,'U',gap_length,gap_type,'no','na')"""
+		#print('CONTIG = ', contigID)
+		#print('agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig',agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig)
 
-		#print('\n#',contigID)
-	
 		#Processing first contig in dataset -OR- on a new chromosome
 		if count == 1 or agp_chrom != agp_prev_chrom: 
 			count = 1
@@ -1089,8 +963,7 @@ for i in chrom_lengths:
 		#Process next contig (not first contig on chrom)
 		else:
 			if overlap >= 0: #if contigs overlap --> NO GAP!
-				print('HEREEEE #1!!!',contigID)
-				
+				#print('HERE #1!!!',contigID)
 				info = process_next_agp_contig(agp_chrom, direction, length, overlap, offset, pairedContig, agp_start, agp_end)
 				agp_prev_chrom,agp_prev_overlap,agp_start, agp_end, contig_start,contig_end,direction,offset = info[0:10]
 				if offset > 0:
@@ -1106,7 +979,7 @@ for i in chrom_lengths:
 					#print(agp_prev_chrom,agp_prev_overlap,agp_start, agp_end, contig_start,contig_end,direction)
 			
 			else: #if contigs do not overlap --> GAP!
-				print('HEREEEE #2!!!',contigID)	
+				#print('HER# #2!!!',contigID)	
 				#process contig to the left of the gap
 				info = process_next_agp_contig(agp_chrom, direction, length, overlap, offset, pairedContig, agp_start, agp_end)
 				agp_prev_chrom,agp_prev_overlap,agp_start, agp_end, contig_start,contig_end,direction,offset = info[0:10]
@@ -1118,8 +991,6 @@ for i in chrom_lengths:
 				agp_chrom,agp_start,agp_end,gap_type,gap_length,agp_prev_overlap = gap_info[0:7]
 				agp.append([agp_chrom,agp_start,agp_end,count,'U',gap_length,gap_type,'no','na'])
 				
-		
-
 	#Write AGP header lines
 	write_AGP_header(agpFile,version)
 	
@@ -1135,7 +1006,7 @@ for i in chrom_lengths:
 	logFile.write('STEP FOUR: DONE!\n\n\n')
 
 	####################################################
-	#STEP SIX - MAKE AGP FASTA FILE FROM AGP TXT FILE FROM STEP FOUR
+	#STEP FIVE - MAKE AGP FASTA FILE FROM AGP TXT FILE FROM STEP FOUR
 	####################################################
 
 	agpFile = open(wkDir + 'results/AGP_v' + version + '.0/AGP_Zoey_Assembly_v' + version + '_' + CHROM + '.txt', 'r')
@@ -1150,13 +1021,11 @@ for i in chrom_lengths:
 		if '#' in line:
 			continue
 		count+= 1
-	
 		line = line.rstrip().split('\t')
 		contigID = line[5]
 	
 		seq = []
-	
-		if 'CTG' in contigID or 'chr' in contigID:
+		if 'CTG' in contigID or 'chr' in contigID: #These are Falcon and Canu contigs, respectively
 			chrom, contigID, extract_coord1, extract_coord2, orient = line[0],line[5],int(line[6]),int(line[7]), line[8]
 			if 'CTG' in contigID:
 				#Extract fasta
@@ -1168,11 +1037,10 @@ for i in chrom_lengths:
 				reverse_comp_contig_fasta(wkDir)
 			else:
 				cmd = 'mv %stemp/contig1.fa %stemp/seq.fa'  % (wkDir,wkDir)
-				#print(cmd)
 				subprocess.call(cmd,shell=True) 
-		
 			seq = read_in_fasta(wkDir)
-		else: #These are gaps   
+		
+		else: #Then these are gaps   
 			gap_length = int(line[5])
 			seq = 'N' * gap_length
 	
@@ -1186,7 +1054,7 @@ for i in chrom_lengths:
 			Seq = seq[i].upper()#.upper()print(seq[i])
 			agp_Fasta.write(Seq)
 
-		prev_chrom = chrom #reset prev_chrom identity
+		prev_chrom = chrom #For each contig in the AGP file, extract it's fasta.....
 
 
 	print('Finished writing out the sequence for %i contigs and gaps to Zoey fasta file' % count)
@@ -1197,11 +1065,11 @@ for i in chrom_lengths:
 
 	#Reformat the fasta file to only have certain # of nucleotides per line
 	reformat_fasta_file(wkDir,CHROM)
-	print('STEP SIX: DONE!')
-	logFile.write('STEP SIX: DONE!\n\n\n')
+	print('STEP FIVE: DONE!')
+	logFile.write('STEP FIVE: DONE!\n\n\n')
 	
 	####################################################
-	#STEP SEVEN - CALCULATE CHROM CONTINUITY FOR ZOEY
+	#STEP SIX - CALCULATE CHROM CONTINUITY FOR ZOEY
 	####################################################
 
 	agpFile = open(wkDir + 'results/AGP_v' + version + '.0/AGP_Zoey_Assembly_v' + version + '_' + CHROM + '.txt', 'r')
@@ -1258,12 +1126,12 @@ for i in chrom_lengths:
 	print('\n##Statistics\nZoey Average continuity on %s (bp): %s \n' % (CHROM,Average_continuity))   
 	logFile.write('\n##Statistics\nZoey Average continuity on %s (bp): %s \n' % (CHROM,Average_continuity))  
 	
-	print('STEP SEVEN: DONE!')
-	logFile.write('STEP SEVEN: DONE!\n\n\n')
+	print('STEP SIX: DONE!')
+	logFile.write('STEP SIX: DONE!\n\n\n')
 
 
 	####################################################
-	#STEP EIGHT - CALCULATE CHROM CONTINUITY FOR CANFAM3
+	#STEP SEVEN - CALCULATE CHROM CONTINUITY FOR CANFAM3
 	####################################################
 
 	cf_count, cf_Average_continuity = calculate_canFam_continuity(CHROM)
