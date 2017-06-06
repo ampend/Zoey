@@ -831,12 +831,84 @@ for i in chrom_lengths:
 	print('STEP THREE: DONE!')
 	
 	####################################################
-	#STEP FOUR - INCORPORATE CANU SPANNED GAPS
+	#STEP FOUR - INCORPORATE CANU+QUIVER SPANNED GAPS
 	####################################################
 	
 	contigGapFile = open(wkDir + 'input/filled_gaps/' + 'gaps_fill.bed.sorted','r')
 	contigGap_PosDict, contigGapCount = {}, 0
+	gapDict,index = {}, 0
+	
+	#Reading in gaps to gap dictionary
+	for line in contigGapFile:
+		line=line.rstrip().split('\t')
+		filledGap_Chrom, filledGap_Start, filledGap_End, filledGap_Dir, filledGap_ID = line[0],int(line[1]),int(line[2]),line[3],line[4]
+		#If not on correct chromosome, skip
+		if filledGap_Chrom != CHROM:
+			continue
+		contigGapCount+=1
+		
+		if '+' in filledGap_Dir or 'fwd' in filledGap_Dir:
+			filledGap_Dir = 'fwd'
+		else:
+			filledGap_Dir = 'rc'
+		filledGap_ID = filledGap_ID.replace('.fa','')
+		index +=1 
+		gapDict[index] = [filledGap_Chrom, filledGap_Start, filledGap_End, filledGap_Dir, filledGap_ID]	
+	###########################
+	
+	new_posDict,index = {},0 #creating new one to store incorporated gaps
+	
+	#Now reading through all primary contigs, finding gaps that overlap between two contigs
+	for i in range(1,len(posDict)-1):
+		index += 1
+		hit = False
+		if i == len(posDict):
+			break
+		z_chrom, z_start, z_end, z_ID, z_gap, z_overlap = posDict[i][0],int(posDict[i][1]),int(posDict[i][2]),posDict[i][3],int(posDict[i][6]),int(posDict[i][7])
+		z_next_chrom, z_next_start, z_next_end, z_next_ID = posDict[i+1][0],int(posDict[i+1][1]),int(posDict[i+1][2]),posDict[i+1][3]
 
+		for i in range(0,len(gapDict)):
+			filledGap_Chrom, filledGap_Start, filledGap_End, filledGap_Dir, filledGap_ID = gapDict[i][0:5]
+			print filledGap_Chrom, filledGap_Start, filledGap_End, filledGap_Dir, filledGap_ID
+			if filledGap_Start < z_end and filledGap_End > z_next_start:
+				
+
+			sys.exit()
+		
+
+
+	
+		for i in range(1,len(posDict)):
+			z_chrom, z_start, z_end, z_ID, z_gap, z_overlap = posDict[i][0],int(posDict[i][1]),int(posDict[i][2]),posDict[i][3],int(posDict[i][6]),int(posDict[i][7])
+			z_next_chrom, z_next_start, z_next_end, z_next_ID = posDict[i+1][0],int(posDict[i+1][1]),int(posDict[i+1][2]),posDict[i+1][3]
+			
+			if z_chrom != filledGap_Chrom:
+				print('ERROR: not same chrom')
+				sys.exit()
+			if filledGap_Start < z_end and filledGap_End > z_end:
+				if filledGap_Start < z_next_start and filledGap_End > z_next_start:
+					filledGapLength = filledGap_End - filledGap_Start + 1
+					#calculate the new overlap value for the contig to the left of the filled gap
+					prev_overlap = z_end - filledGap_Start
+				
+					#Calculate the overlap with the filled gap contig and the zoey contig to the right of the filled gap
+					filledGapOverlap = filledGap_End - z_next_start
+				
+					#add the information for this filled gap to its dictionary
+					contigGap_PosDict[contigGapCount] = [filledGap_Chrom, filledGap_Start, filledGap_End, filledGap_ID, filledGap_Dir, filledGapLength, filledGapOverlap, int('0'), z_next_ID]
+
+					#reset the previous contigs' overlap values and offset values equal to zero
+					posDict[i][6],posDict[i][7],posDict[i][8] = prev_overlap,int('0'),filledGap_ID
+
+	contigGapFile.close() 
+	print('Placed %i filled contig-contig gap(s)' % contigGapCount)
+	
+	#####CONTIG GAP DATA ADDED TO CONTIG POSDICT#####	
+	logFile.write('\nCONTIG GAP posDict ONLY %s\n' % CHROM)
+	for i in contigGap_PosDict:
+		logFile.write(str(contigGap_PosDict[i]) + '\n')
+	
+	"""
 	#Starting index for me to add the gap information to the contig posDict dictionary
 	#	== length of the posDict dictionary
 	startIndex = len(posDict)
@@ -874,8 +946,8 @@ for i in chrom_lengths:
 				
 					#add the information for this filled gap to its dictionary
 					contigGap_PosDict[contigGapCount] = [filledGap_Chrom, filledGap_Start, filledGap_End, filledGap_ID, filledGap_Dir, filledGapLength, filledGapOverlap, int('0'), z_next_ID]
-					startIndex += 1
-					posDict[startIndex] = [filledGap_Chrom, filledGap_Start, filledGap_End, filledGap_ID, filledGap_Dir, filledGapLength, filledGapOverlap, int('0'), z_next_ID]
+
+
 					#reset the previous contigs' overlap values and offset values equal to zero
 					posDict[i][6],posDict[i][7],posDict[i][8] = prev_overlap,int('0'),filledGap_ID
 
@@ -886,20 +958,14 @@ for i in chrom_lengths:
 	logFile.write('\nCONTIG GAP posDict ONLY %s\n' % CHROM)
 	for i in contigGap_PosDict:
 		logFile.write(str(contigGap_PosDict[i]) + '\n')
- 
+ 	"""
  	####Printing out new posDict dictionary that now has contigs + gaps####
+	logFile.write('\nCONTIGS with filled GAPS on %s\n' % CHROM)
  	for i in posDict:
 		logFile.write(str(posDict[i]) + '\n')
  
 	count, totalDict = 0, {}
-	sys.exit()
-	################################################################################################
-	#MERGING TWO POS DICTS TOGETHER
-	# CONTIGS + GAPS
-	
-	totalPosDict = posDict + contigGap_PosDict
-	print totalPosDict
-	sys.exit()
+
 
 
 	############
@@ -939,13 +1005,46 @@ for i in chrom_lengths:
 
 	#Now putting them in the coordinates of the Zoey genome!! :) 
 	count, agp = 0, [] 
-
+	
 	for i in posDict:
 		count += 1
+		print(i, posDict[i])
 		agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig = posDict[i][0:9]
-		if 'CTG-2111' in contigID or 'CTG-2031' in contigID:
-			print('CONTIG = ', contigID)
-			print('agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig',agp_chrom, start, end, contigID, direction, length, overlap, offset, pairedContig)
+
+		"""if 'chr' in pairedContig: #this is a filled gap --- needs to be processed and added to the AGP
+			for j in contigGap_PosDict:
+				if pairedContig in contigGap_PosDict[j][3]:
+					process_filled_gap(contigGap_PosDict[j][3])
+				if overlap >= 0: #if contigs overlap --> NO GAP!
+				info = process_next_agp_contig(agp_chrom, direction, length, overlap, offset, pairedContig, agp_start, agp_end)
+				agp_prev_chrom,agp_prev_overlap,agp_start, agp_end, contig_start,contig_end,direction,offset = info[0:10]
+				if offset > 0:
+					#Add contig to the left of the gap
+					agp.append([agp_chrom, agp_start, agp_end, count, 'D', contigID, contig_start, contig_end, direction])
+					#print(agp_prev_chrom,agp_start, agp_end, contig_start,contig_end,direction,agp_prev_overlap)
+					#Add introduced gap from unaligned sequences from contig-contig junction BLAT
+					count += 1
+					agp.append([agp_chrom, agp_end+1, agp_end+499, count, 'U', '500','BLAT_gap','no','na'])
+					#print(agp_chrom, agp_end+1, agp_end+501, count, 'U', '500','BLAT_gap','no','na')
+				else:
+					agp.append([agp_chrom, agp_start, agp_end, count, 'D', contigID, contig_start, contig_end, direction])
+					#print(agp_prev_chrom,agp_prev_overlap,agp_start, agp_end, contig_start,contig_end,direction)
+			else: #if contigs do not overlap --> GAP!
+				#process contig to the left of the gap
+				info = process_next_agp_contig(agp_chrom, direction, length, overlap, offset, pairedContig, agp_start, agp_end)
+				agp_prev_chrom,agp_prev_overlap,agp_start, agp_end, contig_start,contig_end,direction,offset = info[0:10]
+				agp.append([agp_chrom, agp_start, agp_end, count, 'D', contigID, contig_start, contig_end, direction])
+				#print(agp_chrom, agp_start, agp_end, count, 'D', contigID, contig_start, contig_end, direction)
+			
+				#processing gap
+				count += 1
+				gap_info = process_agp_GAP(agp_chrom, direction, length, overlap, offset, pairedContig, agp_start, agp_end)
+				agp_chrom,agp_start,agp_end,gap_type,gap_length,agp_prev_overlap = gap_info[0:7]
+				agp.append([agp_chrom,agp_start,agp_end,count,'U',gap_length,gap_type,'no','na'])
+				#print(agp_chrom,agp_start,agp_end,count,'U',gap_length,gap_type,'no','na')
+		"""
+		if i == 8:
+			sys.exit()
 		#print('\n#',contigID)
 	
 		#Processing first contig in dataset -OR- on a new chromosome
