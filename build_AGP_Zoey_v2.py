@@ -47,12 +47,12 @@ def make_infile(wkDir):
 		if line.startswith("#") is True: #skips header line
 			continue
 		line = line.rstrip().split('\t')
-		contigID, length, Dir, chrom, start, end = line[0],line[1],line[2],line[3],line[4],line[5]
+		contigID, length, Dir, chrom, start, end = line[0],line[1],line[2],line[3],int(line[4]),int(line[5])
 		if end < start or 'Unknown' in chrom:
 			continue
 		outBedFile.write('%s\t%s\t%s\t%s\t%s\t%s\n' % (chrom,start,end,contigID,length,Dir))
 	primaryContigCoordFile.close()
-	
+		
 	#Path to feichen's filled gaps
 	gapFile = open(wkDir + 'input/filled_gaps/Formatted_gaps_fill.bed','r')
 	for line in gapFile:
@@ -584,6 +584,7 @@ def extract_contig_fasta(fastaRoot,contigID,orient,extract_coord1,extract_coord2
     #Contig 1
     fasta_path1 = fastaRoot + contigID + '/' + contigID + '.fa'
     cmd = 'samtools faidx %s %s:%i-%i  > %stemp/contig1.fa' % (fasta_path1,contigID,extract_coord1,extract_coord2,wkDir)
+    logFile.write('%s\n' % cmd)
     #print(cmd)
     subprocess.call(cmd,shell=True)
 ###################################################################################################
@@ -591,7 +592,8 @@ def extract_filledGap_fasta(fastaRoot,contigID,orient,extract_coord1,extract_coo
     #Contig 1
     fasta_path1 = gap_fastaRoot + '/' + contigID + '.quiver.fa'
     cmd = 'samtools faidx %s %s:%i-%i  > %stemp/contig1.fa' % (fasta_path1,contigID,extract_coord1,extract_coord2,wkDir)
-    #print(cmd)
+    logFile.write('%s\n' % cmd)
+    print(cmd)
     subprocess.call(cmd,shell=True)
 ###################################################################################################    
 def reverse_comp_contig_fasta(wkDir):
